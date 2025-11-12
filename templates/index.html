@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новости Сбербанк</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 16px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000000);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 16px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .news-card {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            border-radius: 12px;
+            padding: 16px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+        }
+
+        .news-card:active {
+            transform: scale(0.98);
+        }
+
+        .news-source {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--tg-theme-link-color, #0088cc);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .news-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--tg-theme-text-color, #000000);
+            margin-bottom: 8px;
+            line-height: 1.4;
+        }
+
+        .news-content {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #666666);
+            margin-bottom: 12px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .news-date {
+            font-size: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #ff0000;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: var(--tg-theme-hint-color, #999999);
+            font-size: 16px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: #1a1a1a;
+                color: #ffffff;
+            }
+            
+            .news-card {
+                background: #2a2a2a;
+                border-color: #3a3a3a;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Новости Сбербанк</h1>
+        </div>
+        <div id="content">
+            <div class="loading">Загрузка новостей...</div>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.hide();
+
+        async function loadNews() {
+            const contentDiv = document.getElementById('content');
+            
+            try {
+                const response = await fetch('/api/news');
+                
+                if (!response.ok) {
+                    throw new Error('Failed to load news');
+                }
+                
+                const news = await response.json();
+                
+                if (news.length === 0) {
+                    contentDiv.innerHTML = '<div class="empty">Новостей пока нет</div>';
+                    return;
+                }
+                
+                const newsList = document.createElement('div');
+                newsList.className = 'news-list';
+                
+                news.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'news-card';
+                    card.onclick = () => {
+                        tg.openLink(item.url);
+                    };
+                    
+                    card.innerHTML = `
+                        <div class="news-source">[${item.source}]</div>
+                        <div class="news-title">${escapeHtml(item.title)}</div>
+                        ${item.content ? `<div class="news-content">${escapeHtml(item.content)}</div>` : ''}
+                        <div class="news-date">Дата: ${item.date}</div>
+                    `;
+                    
+                    newsList.appendChild(card);
+                });
+                
+                contentDiv.innerHTML = '';
+                contentDiv.appendChild(newsList);
+                
+            } catch (error) {
+                console.error('Error loading news:', error);
+                contentDiv.innerHTML = '<div class="error">Ошибка загрузки новостей</div>';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        loadNews();
+    </script>
+</body>
+</html>
