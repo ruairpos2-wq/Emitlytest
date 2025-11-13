@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Новости Сбербанк</title>
+    <title>Инвестиционные новости</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -12,185 +12,482 @@
             box-sizing: border-box;
         }
 
+        :root {
+            --primary-color: #1a365d;
+            --secondary-color: #2c5282;
+            --accent-color: #3182ce;
+            --bg-gradient: linear-gradient(135deg, #1e3a5f 0%, #2c5282 50%, #3182ce 100%);
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.15);
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --border-color: #e2e8f0;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            padding: 16px;
-            overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8f9fa;
+            color: #2d3748;
+            min-height: 100vh;
+        }
+
+        .hero-header {
+            background: var(--bg-gradient);
+            color: white;
+            padding: 32px 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .hero-header p {
+            font-size: 14px;
+            opacity: 0.9;
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
+            padding: 16px;
         }
 
-        .header {
+        .stats-bar {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 20px;
+            margin: -20px 16px 20px;
+            box-shadow: var(--card-shadow);
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stat-item {
             text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid var(--tg-theme-hint-color, #e0e0e0);
-            margin-bottom: 20px;
         }
 
-        .header h1 {
-            font-size: 24px;
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            margin-top: 6px;
+            letter-spacing: 0.8px;
+        }
+
+        .tabs-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+            padding: 8px;
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            color: #6b7280;
+            font-size: 15px;
             font-weight: 600;
-            color: var(--tg-theme-text-color, #000000);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 16px;
-            color: var(--tg-theme-hint-color, #999999);
+        .tab-button.active {
+            background: var(--bg-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(49, 130, 206, 0.25);
+        }
+
+        .tab-button:hover:not(.active) {
+            background: #f7fafc;
+        }
+
+        .tab-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .tab-button:not(.active) .tab-badge {
+            background: #e5e7eb;
+            color: #6b7280;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .news-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            display: grid;
+            gap: 20px;
         }
 
         .news-card {
-            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            background: white;
             border-radius: 12px;
-            padding: 16px;
-            transition: transform 0.2s, box-shadow 0.2s;
+            padding: 24px;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            border: 1px solid var(--tg-theme-hint-color, #e0e0e0);
+            border: 1px solid var(--border-color);
+            border-left: 3px solid var(--border-color);
         }
 
-        .news-card:active {
-            transform: scale(0.98);
+        .news-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow-hover);
+            border-left-color: var(--accent-color);
+        }
+
+        .news-card.sberbank-card {
+            border-left-color: var(--accent-color);
+            background: linear-gradient(to right, rgba(49, 130, 206, 0.02) 0%, white 100%);
+        }
+
+        .news-card.sberbank-card:hover {
+            border-left-color: var(--primary-color);
+            background: linear-gradient(to right, rgba(49, 130, 206, 0.04) 0%, white 100%);
+        }
+
+        .news-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
         }
 
         .news-source {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--tg-theme-link-color, #0088cc);
-            margin-bottom: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
             text-transform: uppercase;
+            padding: 6px 14px;
+            background: #f7fafc;
+            border-radius: 6px;
             letter-spacing: 0.5px;
         }
 
-        .news-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--tg-theme-text-color, #000000);
-            margin-bottom: 8px;
-            line-height: 1.4;
-        }
-
-        .news-content {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color, #666666);
-            margin-bottom: 12px;
-            line-height: 1.5;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        .sberbank-card .news-source {
+            color: var(--accent-color);
+            background: rgba(49, 130, 206, 0.08);
         }
 
         .news-date {
             font-size: 12px;
-            color: var(--tg-theme-hint-color, #999999);
+            color: #9ca3af;
+            font-weight: 500;
         }
 
-        .error {
-            text-align: center;
-            padding: 40px;
-            color: #ff0000;
+        .news-title {
+            font-size: 19px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 14px;
+            line-height: 1.5;
+            letter-spacing: -0.2px;
         }
 
-        .empty {
+        .news-content {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+
+        .news-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .news-category {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+        }
+
+        .read-more {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .read-more:hover {
+            color: var(--primary-color);
+        }
+
+        .loading {
             text-align: center;
-            padding: 40px;
-            color: var(--tg-theme-hint-color, #999999);
+            padding: 60px 20px;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #f3f4f6;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
             font-size: 16px;
+            color: #6b7280;
         }
 
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: #1a1a1a;
-                color: #ffffff;
-            }
-            
-            .news-card {
-                background: #2a2a2a;
-                border-color: #3a3a3a;
-            }
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .empty-text {
+            font-size: 15px;
+            color: #6b7280;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Новости Сбербанк</h1>
+    <div class="hero-header">
+        <h1>Инвестиционные новости</h1>
+        <p>РБК (инвестиции) и Telegram канал @markettwits</p>
+    </div>
+
+    <div class="stats-bar" id="statsBar" style="display: none;">
+        <div class="stat-item">
+            <div class="stat-value" id="totalNewsCount">0</div>
+            <div class="stat-label">СВЕЖИЕ</div>
         </div>
-        <div id="content">
-            <div class="loading">Загрузка новостей...</div>
+        <div class="stat-item">
+            <div class="stat-value" id="sberbankNewsCount">0</div>
+            <div class="stat-label">СБЕРБАНК</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-value" id="lastUpdate">—</div>
+            <div class="stat-label">ОБНОВЛЕНО</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="tabs-container">
+            <button class="tab-button active" data-tab="all">
+                Все свежие
+                <span class="tab-badge" id="badgeAll">0</span>
+            </button>
+            <button class="tab-button" data-tab="sberbank">
+                Сбербанк
+                <span class="tab-badge" id="badgeSberbank">0</span>
+            </button>
+        </div>
+
+        <div class="tab-content active" id="contentAll">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Загрузка свежих новостей (РБК + Telegram)...</div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="contentSberbank">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Загрузка новостей про Сбербанк...</div>
+            </div>
         </div>
     </div>
 
     <script>
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.MainButton.hide();
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
 
-        async function loadNews() {
-            const contentDiv = document.getElementById('content');
-            
-            try {
-                const response = await fetch('/api/news');
-                
-                if (!response.ok) {
-                    throw new Error('Failed to load news');
-                }
-                
-                const news = await response.json();
-                
-                if (news.length === 0) {
-                    contentDiv.innerHTML = '<div class="empty">Новостей пока нет</div>';
-                    return;
-                }
-                
-                const newsList = document.createElement('div');
-                newsList.className = 'news-list';
-                
-                news.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'news-card';
-                    card.onclick = () => {
-                        tg.openLink(item.url);
-                    };
-                    
-                    card.innerHTML = `
-                        <div class="news-source">[${item.source}]</div>
-                        <div class="news-title">${escapeHtml(item.title)}</div>
-                        ${item.content ? `<div class="news-content">${escapeHtml(item.content)}</div>` : ''}
-                        <div class="news-date">Дата: ${item.date}</div>
-                    `;
-                    
-                    newsList.appendChild(card);
+        let allNews = [];
+        let sberbankNews = [];
+
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.dataset.tab;
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
                 });
-                
-                contentDiv.innerHTML = '';
-                contentDiv.appendChild(newsList);
-                
-            } catch (error) {
-                console.error('Error loading news:', error);
-                contentDiv.innerHTML = '<div class="error">Ошибка загрузки новостей</div>';
+                document.getElementById('content' + targetTab.charAt(0).toUpperCase() + targetTab.slice(1)).classList.add('active');
+            });
+        });
+
+        function formatDate(dateStr) {
+            try {
+                const date = new Date(dateStr);
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = String(date.getFullYear()).slice(-2);
+                return `${day}.${month}.${year}`;
+            } catch (e) {
+                return dateStr;
             }
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function createNewsCard(news) {
+            const isSberbank = news.category === 'sberbank' || 
+                              news.title.toLowerCase().includes('сбер') || 
+                              (news.content && news.content.toLowerCase().includes('сбер'));
+            
+            // Показываем контент только если он отличается от заголовка
+            const hasUniqueContent = news.content && 
+                                    news.content !== news.title && 
+                                    news.content.trim() !== '' && 
+                                    news.content !== 'Нет описания';
+            
+            return `
+                <div class="news-card ${isSberbank ? 'sberbank-card' : ''}" onclick="openNews('${news.url}')">
+                    <div class="news-header">
+                        <div class="news-source">${news.source || 'РБК'}</div>
+                        <div class="news-date">${formatDate(news.date)}</div>
+                    </div>
+                    <div class="news-title">${news.title}</div>
+                    ${hasUniqueContent ? `<div class="news-content">${news.content}</div>` : ''}
+                    <div class="news-footer">
+                        <div class="news-category">${isSberbank ? 'Сбербанк' : 'Общие новости'}</div>
+                        <a href="${news.url}" class="read-more" onclick="event.stopPropagation()">Читать далее →</a>
+                    </div>
+                </div>
+            `;
         }
 
-        loadNews();
+        function renderNews(news, containerId) {
+            const container = document.getElementById(containerId);
+            if (news.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">Нет новостей</div>
+                        <div class="empty-title">Новостей пока нет</div>
+                        <div class="empty-text">Здесь появятся последние новости</div>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = '<div class="news-list">' + news.map(createNewsCard).join('') + '</div>';
+        }
+
+        function openNews(url) {
+            if (tg && tg.openLink) {
+                tg.openLink(url);
+            } else {
+                window.open(url, '_blank');
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalNewsCount').textContent = allNews.length;
+            document.getElementById('sberbankNewsCount').textContent = sberbankNews.length;
+            document.getElementById('badgeAll').textContent = allNews.length;
+            document.getElementById('badgeSberbank').textContent = sberbankNews.length;
+            const now = new Date();
+            document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            document.getElementById('statsBar').style.display = 'flex';
+        }
+
+        async function fetchAllNews() {
+            try {
+                const response = await fetch('/api/news/recent');
+                allNews = await response.json();
+                renderNews(allNews, 'contentAll');
+            } catch (error) {
+                document.getElementById('contentAll').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">Ошибка</div>
+                        <div class="empty-title">Ошибка загрузки</div>
+                        <div class="empty-text">Не удалось загрузить новости</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function fetchSberbankNews() {
+            try {
+                const response = await fetch('/api/news/sberbank');
+                sberbankNews = await response.json();
+                renderNews(sberbankNews, 'contentSberbank');
+            } catch (error) {
+                document.getElementById('contentSberbank').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">Ошибка</div>
+                        <div class="empty-title">Ошибка загрузки</div>
+                        <div class="empty-text">Не удалось загрузить новости</div>
+                    </div>
+                `;
+            }
+        }
+
+        async function init() {
+            await Promise.all([fetchAllNews(), fetchSberbankNews()]);
+            updateStats();
+        }
+
+        init();
+        setInterval(init, 5 * 60 * 1000);
     </script>
 </body>
 </html>

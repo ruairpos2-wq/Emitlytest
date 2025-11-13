@@ -17,20 +17,21 @@ class NewsDB:
                 date TEXT NOT NULL,
                 source TEXT NOT NULL,
                 url TEXT UNIQUE NOT NULL,
+                category TEXT DEFAULT 'general',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
         conn.commit()
         conn.close()
     
-    def add_news(self, title, content, date, source, url):
+    def add_news(self, title, content, date, source, url, category='general'):
         try:
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
             cursor.execute('''
-                INSERT OR IGNORE INTO news (title, content, date, source, url)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (title, content, date, source, url))
+                INSERT OR IGNORE INTO news (title, content, date, source, url, category)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (title, content, date, source, url, category))
             conn.commit()
             conn.close()
             return True
@@ -38,13 +39,16 @@ class NewsDB:
             print(f"Error adding news: {e}")
             return False
     
-    def get_all_news(self):
+    def get_all_news(self, category=None):
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        cursor.execute('SELECT title, content, date, source, url FROM news ORDER BY date DESC')
+        if category:
+            cursor.execute('SELECT title, content, date, source, url, category FROM news WHERE category = ? ORDER BY date DESC', (category,))
+        else:
+            cursor.execute('SELECT title, content, date, source, url, category FROM news ORDER BY date DESC')
         rows = cursor.fetchall()
         conn.close()
-        return [{'title': r[0], 'content': r[1], 'date': r[2], 'source': r[3], 'url': r[4]} for r in rows]
+        return [{'title': r[0], 'content': r[1], 'date': r[2], 'source': r[3], 'url': r[4], 'category': r[5]} for r in rows]
     
     def clear_news(self):
         conn = sqlite3.connect(self.db_path)
