@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Парсер Telegram-канала с автопрокруткой через Selenium
-Загружает до 200 сообщений с упоминанием "Сбербанк"
-"""
+# Парсер Telegram через Selenium
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
